@@ -5,3 +5,8 @@ output/*.json
 state.json
 /tmp/wechat_frame_*.png
 .pytest_cache/
+.DS_Store
+.paddlex/
+
+# Claude Code local skills
+.claude/
