@@ -108,7 +108,7 @@ def _parse_blocks_to_messages(blocks, chat_name):
             continue
 
         if _is_media_indicator(text):
-            current_text_parts.append("[media]")
+            continue
         else:
             current_text_parts.append(text)
 
