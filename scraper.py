@@ -197,32 +197,28 @@ def perceptual_hash(image, hash_size=16):
 
 
 def save_chat(chat_name, messages, output_dir):
-    """Write messages to a JSON file."""
+    """Write messages to a JSON file — just the text, optimized for copy-paste."""
     output_path = output_dir / f"{chat_name}.json"
 
-    existing_messages = {}
+    existing_texts = []
     if output_path.exists():
         with open(output_path) as f:
             data = json.load(f)
-            for msg in data.get("messages", []):
-                existing_messages[msg["message_hash"]] = msg
+            existing_texts = data.get("messages", [])
 
-    for msg in messages:
-        existing_messages[msg["message_hash"]] = msg
-
-    all_msgs = sorted(existing_messages.values(), key=lambda m: m["timestamp"])
+    new_texts = [msg["message_text"] for msg in messages]
+    all_texts = existing_texts + [t for t in new_texts if t not in existing_texts]
 
     output = {
         "chat_name": chat_name,
-        "last_updated": datetime.now(CST).isoformat(),
-        "message_count": len(all_msgs),
-        "messages": all_msgs,
+        "message_count": len(all_texts),
+        "messages": all_texts,
     }
 
     with open(output_path, "w") as f:
         json.dump(output, f, indent=2, ensure_ascii=False)
 
-    print(f"  Saved {len(all_msgs)} messages to {output_path}")
+    print(f"  Saved {len(all_texts)} messages to {output_path}")
 
 
 def load_config():
