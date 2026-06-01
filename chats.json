@@ -1,0 +1,9 @@
+{
+  "chats": [
+    "投资讨论群",
+    "股票交流群"
+  ],
+  "scroll_step": 800,
+  "scroll_delay": 1.0,
+  "output_dir": "./output"
+}

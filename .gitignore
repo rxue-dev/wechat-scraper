@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.venv/
+output/*.json
+state.json
+/tmp/wechat_frame_*.png
+.pytest_cache/
