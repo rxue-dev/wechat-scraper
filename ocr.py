@@ -16,7 +16,7 @@ def get_ocr():
     """Lazy-initialize PaddleOCR (heavy startup, reuse across calls)."""
     global _ocr_instance
     if _ocr_instance is None:
-        _ocr_instance = PaddleOCR(use_angle_cls=True, lang="ch", show_log=False)
+        _ocr_instance = PaddleOCR(use_textline_orientation=True, lang="ch")
     return _ocr_instance
 
 
@@ -26,17 +26,22 @@ def extract_messages(image_path, chat_name):
     Returns a list of message dicts sorted top-to-bottom (as they appear on screen).
     """
     ocr = get_ocr()
-    result = ocr.ocr(str(image_path), cls=True)
+    result = ocr.predict(str(image_path))
 
-    if not result or not result[0]:
+    if not result:
         return []
 
-    text_blocks = []
-    for line in result[0]:
-        bbox = line[0]
-        text = line[1][0]
-        confidence = line[1][1]
+    # PaddleOCR 3.x returns a list of result dicts (one per image) with parallel
+    # lists: rec_texts, rec_scores, and polygons (rec_polys or dt_polys).
+    res = result[0]
+    texts = res["rec_texts"]
+    scores = res["rec_scores"]
+    polys = res.get("rec_polys")
+    if polys is None:
+        polys = res["dt_polys"]
 
+    text_blocks = []
+    for text, confidence, bbox in zip(texts, scores, polys):
         if confidence < 0.5:
             continue
 

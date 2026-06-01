@@ -4,7 +4,7 @@ import subprocess
 import time
 
 import Quartz
-from AppKit import NSWorkspace, NSRunningApplication
+from AppKit import NSWorkspace, NSRunningApplication, NSApplicationActivateIgnoringOtherApps
 
 
 WECHAT_BUNDLE_ID = "com.tencent.xinWeChat"
@@ -45,7 +45,7 @@ def focus_wechat():
     for app in running_apps:
         if app.bundleIdentifier() == WECHAT_BUNDLE_ID:
             app.activateWithOptions_(
-                NSRunningApplication.NSApplicationActivateIgnoringOtherApps
+                NSApplicationActivateIgnoringOtherApps
             )
             time.sleep(0.5)
             return True
@@ -89,7 +89,11 @@ def click_chat_by_name(chat_name, window_bounds):
     This searches the WeChat chat list for the given name and clicks it.
     Returns True if the chat was found and clicked.
     """
+    # AppleScript `keystroke` cannot type CJK/Unicode characters (it emits one
+    # "a" per non-ASCII char). Put the name on the clipboard and paste instead.
+    escaped_name = chat_name.replace("\\", "\\\\").replace('"', '\\"')
     script = f'''
+    set the clipboard to "{escaped_name}"
     tell application "System Events"
         tell process "WeChat"
             set frontmost to true
@@ -97,7 +101,10 @@ def click_chat_by_name(chat_name, window_bounds):
             -- Use CMD+F to search for the chat
             keystroke "f" using command down
             delay 0.5
-            keystroke "{chat_name}"
+            -- Clear any existing text, then paste the chat name
+            keystroke "a" using command down
+            delay 0.2
+            keystroke "v" using command down
             delay 1.0
             keystroke return
             delay 0.5
