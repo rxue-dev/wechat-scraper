@@ -149,7 +149,15 @@ def _try_parse_timestamp(text):
     - "2024/3/1 14:32"
     """
     text = text.strip()
+    try:
+        return _parse_timestamp(text)
+    except ValueError:
+        # OCR can misread digits (e.g. hour 25), producing an out-of-range
+        # date/time. Treat unparseable timestamps as "not a timestamp".
+        return None
 
+
+def _parse_timestamp(text):
     m = re.match(r"^(\d{4})年(\d{1,2})月(\d{1,2})日\s+(\d{1,2}):(\d{2})$", text)
     if m:
         return datetime(
