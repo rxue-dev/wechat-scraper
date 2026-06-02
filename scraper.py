@@ -116,7 +116,11 @@ def scrape_chat(chat_name, window, scroll_step, scroll_delay, backfill, dry_run)
         pyautogui.scroll(scroll_step // 100, x=center_x, y=center_y)
         time.sleep(scroll_delay)
 
-        screenshot = wait_for_render(chat_area)
+        try:
+            screenshot = wait_for_render(chat_area)
+        except Exception as e:
+            print(f"\n  WARNING: capture failed ({e}); stopping with partial results")
+            break
         if screenshot is None:
             break
 
@@ -177,11 +181,22 @@ def wait_for_render(chat_area, timeout=3.0, interval=0.3):
     return prev
 
 
-def capture_region(region):
-    """Capture a screen region. region = (x, y, width, height)."""
+def capture_region(region, retries=3, retry_delay=0.2):
+    """Capture a screen region. region = (x, y, width, height).
+
+    macOS screencapture occasionally writes a temp file that PIL can't yet
+    read, raising UnidentifiedImageError. Retry a few times before giving up.
+    """
     x, y, w, h = region
     bbox = (x, y, x + w, y + h)
-    return ImageGrab.grab(bbox)
+    last_err = None
+    for attempt in range(retries):
+        try:
+            return ImageGrab.grab(bbox)
+        except Exception as e:
+            last_err = e
+            time.sleep(retry_delay)
+    raise last_err
 
 
 def perceptual_hash(image, hash_size=16):
